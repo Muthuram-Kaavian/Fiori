@@ -1,0 +1,72 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:form="sap.ui.layout.form" controllerName="project1.controller.App" displayBlock="true">
+
+    <Page id="page" title="Book Store">
+       
+        <Table id="table3" items="{Books>/Books}" mode="SingleSelectLeft">
+         
+                   
+    <columns>
+                <Column id="column9" hAlign="Left">
+                    <header><Label text="ID" id="label9"/></header>
+                </Column>
+                <Column id="column10" hAlign="Left">
+                    <header><Label text="Title" id="label10"/></header>
+                </Column>
+                <Column id="column11" hAlign="Left">
+                    <header><Label text="Author" id="label11"/></header>
+                </Column>
+                <Column id="column12">
+                    <header><Label text="Price" id="label12"/></header>
+                </Column>
+                <Column id="column13">
+                    <header><Label text="Stock Quantity" id="label13"/></header>
+                </Column>
+            </columns>
+
+            <items>
+                <ColumnListItem type="Active" id="item3">
+                    <cells>
+                        <Text text="{Books>ID}" id="bookID"/>
+                        <Text text="{Books>title}" id="bookTitle"/>
+                        <Text text="{Books>author}" id="bookAuthor"/>
+                        <Text text="{Books>price}" id="bookPrice"/>
+                        <Text text="{Books>stock}" id="bookStock"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+
+       
+        <dependents>
+            <Dialog id="OpenDialog" title="Add Book">
+                <buttons>
+                    <Button id="confirmCreate" text="Add" press="onConfirmDialog" type="Emphasized"/>
+                    <Button id="cancelCreate" text="Cancel" press="onCancelDialog" type="Transparent"/>
+                </buttons>
+                <form:SimpleForm editable="true" layout="ResponsiveGridLayout" id="simpleform">
+                    <form:content>
+                        <Label text="Book ID" required="true" id="bookid"/>
+                        <Input id="idBookId"/>
+                        <Label text="Title" id="booktitle"/>
+                        <Input id="idBookTitle"/>
+                        <Label text="Author" id="author"/>
+                        <Input id="idBookAuthor"/>
+                        <Label text="Price" id="price"/>
+                        <Input id="idBookPrice"/>
+                        <Label text="Stock Quantity" id="stock"/>
+                        <Input id="idBookStock"/>
+                    </form:content>
+                </form:SimpleForm>
+            </Dialog>
+        </dependents>
+     
+    <headerContent>
+
+        <Button xmlns="sap.m" text="Add Book" id="createButton" icon="sap-icon://add" tooltip="Create" press="onOpenAddDialog"/>
+        <Button xmlns="sap.m" text="Delete Book" id="deleteButton" icon="sap-icon://delete" tooltip="Delete" press="onDelete"/>
+          <Button xmlns="sap.m" text="Edit Book" id="editButton" icon="sap-icon://edit" tooltip="Edit" press="onEdit"/>
+    </headerContent>
+
+    </Page>
+
+</mvc:View>
