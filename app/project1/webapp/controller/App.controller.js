@@ -1,187 +1,135 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/ui/model/odata/v4/ODataModel",
     "sap/m/MessageToast"
-], function (Controller, ODataModel, MessageToast) {
+], function (Controller, MessageToast) {
     "use strict";
 
     return Controller.extend("project1.controller.App", {
-        
         onInit: function () {
-            var oModel = new ODataModel({
-                serviceUrl: "https://port4004-workspaces-ws-x5xhk.us10.trial.applicationstudio.cloud.sap/odata/v4/catalog/",
-                synchronizationMode: "None"
-            });
-
-            this.getView().setModel(oModel, "Books");
-            this._oTable = this.byId("table3"); 
+            this._oTable = this.byId("Books");
         },
 
-        onOpenAddDialog: function () {
-            var oView = this.getView();
-        
-            // **Clear previous values before opening the form**
-            oView.byId("idBookId").setValue("");
-            oView.byId("idBookTitle").setValue("");
-            oView.byId("idBookAuthor").setValue("");
-            oView.byId("idBookPrice").setValue("");
-            oView.byId("idBookStock").setValue("");
-        
-            oView.byId("OpenDialog").open();
+        // Open Create Dialog
+        onOpenDialog: function () {
+            this.getView().byId("OpenDialog").open();
         },
 
-        onCancelDialog: function (oEvent) {
+        // Close Create Dialog
+        onCanceldialog: function (oEvent) {
             oEvent.getSource().getParent().close();
         },
-        onConfirmDialog: function () {
-            var oButton = this.getView().byId("confirmCreate");
-        
-            if (oButton.getText() === "Add") {
-                this.onCreate();
-            } else {
-                this.onUpdate();
-            }
-        },        
-        onCreate: function () {
-            var oView = this.getView();
-            var oModel = oView.getModel("Books");
-        
-            // **Retrieve book ID and validate**
-            var bookId = oView.byId("idBookId").getValue();
-            if (!bookId) {
-                MessageToast.show("Book ID cannot be blank");
+
+        // Create Book
+        onNewBook: function () {
+            var oModel = this.getView().getModel();
+            var oBookId = this.byId("ID").getValue();
+
+            if (!oBookId || isNaN(oBookId)) {
+                MessageToast.show("Book ID must be a valid integer");
                 return;
             }
-        
-            var oNewBook = {
-                "ID": parseInt(bookId, 10),
-                "title": oView.byId("idBookTitle").getValue().trim(),
-                "author": oView.byId("idBookAuthor").getValue().trim(),
-                "price": parseFloat(oView.byId("idBookPrice").getValue()), 
-                "stock": parseInt(oView.byId("idBookStock").getValue(), 10) 
+
+            var oData = {
+                "ID": parseInt(oBookId, 10),
+                "title": this.byId("title").getValue(),
+                "author": this.byId("author").getValue(),
+                "price": this.byId("price").getValue()
             };
 
-            console.log("New Book Data:", JSON.stringify(oNewBook));
-
-    
-            var oListBinding = this._oTable.getBinding("items");
-
-            if (!oListBinding) {
-                MessageToast.show("Error: Table binding is missing!");
-                console.error("Table binding not found.");
-                return;
+            var oBinding = this._oTable.getBinding("items");
+            if (oBinding) {
+                oBinding.create(oData);
+                MessageToast.show("Book created successfully!");
+                this.byId("OpenDialog").close();
+                this.refreshModel();
             }
-
-      
-            var oContext = oListBinding.create(oNewBook);
-            console.log("Created Context:", oContext);
-
-            if (!oContext) {
-                MessageToast.show("Error creating book. Please check the data.");
-                return;
-            }
-
-            oView.byId("OpenDialog").close();
-
-           
-            oContext.created()
-                .then(() => {
-                    MessageToast.show("Book added successfully");
-                    oModel.refresh(); 
-                })
-                .catch((error) => {
-                    if (error && error.message) { 
-                        MessageToast.show("Error adding book: " + error.message);
-                        console.error("Create failed:", error);
-                    }
-                });
-        },        
-        onDelete: function(){
-            var oSelected = this.byId("table3").getSelectedItem();
-            if(oSelected){
-                var Selected = oSelected.getBindingContext("Books").getObject().soNumber;
-            
-                oSelected.getBindingContext("Books").delete("$auto").then(function () {
-                MessageToast.show("SuccessFully Deleted");
-                }.bind(this), function (oError) {
-                    MessageToast.show("Deletion Error: ",oError);
-                });
-            } else {
-                MessageToast.show("Please Select a Row to Delete");
-            }
-            
         },
-        onEdit: function () {
-            var oTable = this.getView().byId("table3");
+
+        // Open Edit Dialog with Selected Book Details
+        onEditDialog: function () {
+            var oTable = this.byId("Books");
+            var oSelectedItem = oTable.getSelectedItem();
+
+            if (!oSelectedItem) {
+                MessageToast.show("Please select a book to edit.");
+                return;
+            }
+
+            var oBook = oSelectedItem.getBindingContext().getObject();
+            this.byId("ebookId").setValue(oBook.bookId);
+            this.byId("etitle").setValue(oBook.title);
+            this.byId("eauthor").setValue(oBook.author);
+            this.byId("eprice").setValue(oBook.price);
+
+            this.getView().byId("EditDialog").open();
+        },
+
+        // Close Edit Dialog
+        onCanceleditdialog: function () {
+            this.getView().byId("EditDialog").close();
+        },
+
+        // Update Book Details
+        onUpdateBook: function () {
+            var oTable = this.byId("Books");
+            var oSelectedItem = oTable.getSelectedItem();
+
+            if (!oSelectedItem) {
+                MessageToast.show("No book selected.");
+                return;
+            }
+
+            var oContext = oSelectedItem.getBindingContext();
+            var oModel = this.getView().getModel();
+
+            // Get new values
+            var updatedData = {
+                "ID": parseInt(this.byId("ebookId").getValue(), 10),
+                "title": this.byId("etitle").getValue(),
+                "author": this.byId("eauthor").getValue(),
+                "price": this.byId("eprice").getValue()
+            };
+
+            // Update model
+            oContext.setProperty("title", updatedData.title);
+            oContext.setProperty("author", updatedData.author);
+            oContext.setProperty("price", updatedData.price);
+
+            this.refreshModel();
+            MessageToast.show("Book details updated successfully!");
+            this.byId("EditDialog").close();
+        },
+
+       
+        onDelete: function () {
+            var oTable = this.byId("Books");
             var oSelectedItem = oTable.getSelectedItem();
         
             if (!oSelectedItem) {
-                sap.m.MessageToast.show("Please select a book to edit.");
+                MessageToast.show("Please select a book to delete.");
                 return;
             }
         
-            var oContext = oSelectedItem.getBindingContext("Books");
-            var oBook = oContext.getObject();
+            var oContext = oSelectedItem.getBindingContext();
         
-            var oDialog = this.getView().byId("OpenDialog");
-            this.getView().byId("idBookId").setValue(oBook.ID);
-            this.getView().byId("idBookTitle").setValue(oBook.title);
-            this.getView().byId("idBookAuthor").setValue(oBook.author);
-            this.getView().byId("idBookPrice").setValue(oBook.price);
-            this.getView().byId("idBookStock").setValue(oBook.stock);
-        
-            this.getView().byId("confirmCreate").setText("Update");
-        
-            // Store the selected context for update
-            this._oEditContext = oContext;
-        
-            oDialog.open();
-        },
-        onUpdate: function () {
-            var oView = this.getView();
-            var oModel = oView.getModel("Books");
-        
-            if (!this._oEditContext) {
-                sap.m.MessageToast.show("No book selected for update.");
+            if (!oContext) {
+                MessageToast.show("Error: Could not retrieve book data.");
                 return;
             }
         
-            var oUpdatedBook = {
-                "title": oView.byId("idBookTitle").getValue().trim(),
-                "author": oView.byId("idBookAuthor").getValue().trim(),
-                "price": parseFloat(oView.byId("idBookPrice").getValue()), 
-                "stock": parseInt(oView.byId("idBookStock").getValue(), 10)
-            };
+            // Call delete operation on the bound context
+            oContext.delete().then(function () {
+                MessageToast.show("Book deleted successfully.");
+            }).catch(function (oError) {
+                MessageToast.show("Error deleting book: " + oError.message);
+            });
         
-            console.log("Updated Book Data:", JSON.stringify(oUpdatedBook));
-        
-            // Update properties in the existing context
-            this._oEditContext.setProperty("title", oUpdatedBook.title);
-            this._oEditContext.setProperty("author", oUpdatedBook.author);
-            this._oEditContext.setProperty("price", oUpdatedBook.price);
-            this._oEditContext.setProperty("stock", oUpdatedBook.stock);
-        
-            // Submit changes to backend
-            oModel.submitBatch("Books")
-                .then(() => {
-                    sap.m.MessageToast.show("Book updated successfully");
-        
-                    // Refresh table binding
-                    this._oTable.getBinding("items").refresh();
-                })
-                .catch((error) => {
-                    sap.m.MessageToast.show("Error updating book: " + (error.message || "Unknown error"));
-                    console.error("Update failed:", error);
-                });
-        
-            // Close the dialog
-            oView.byId("OpenDialog").close();
-        
-            // Clear edit context
-            this._oEditContext = null;
+            oTable.removeSelections(true);
+        },        
+   
+        refreshModel: function () {
+            var oModel = this.getView().getModel();
+            oModel.refresh(true);
         }
-        
-        
-        
     });
 });

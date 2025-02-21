@@ -1,11 +1,15 @@
-namespace Bookstore;
+namespace Bookshop;
 
-entity Books
-{
-    key ID:UUID;
-    title:String;
-    author:String;
-    price:Decimal;
-    stock:Integer;
-   
+entity Books{
+    key ID:Integer;
+    title: String;
+    author: String;
+    price: Integer;
 }
+// entity Migrate {
+//     key ID: Integer;
+//     title: String;
+//     author: String;
+//     price: String;
+//     migrateddate: Timestamp;
+// }
